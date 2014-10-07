@@ -1,0 +1,2 @@
+- automatische Feldkonfiguration ist noch implementiert (grundzüge stehen) -> Config Prop: "autoFields"
+- ermöglichen nach mehreren Feldern zu sortieren (zB ORDER BY a,b,c DESC ; aktuell ist nur ein sortier-Feld möglich)

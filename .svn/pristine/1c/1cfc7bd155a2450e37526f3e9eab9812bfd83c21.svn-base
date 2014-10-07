@@ -1,0 +1,8 @@
+- jQuery Plugin
+
+- ermöglicht es vollautomatisch (via ajax) (momentan nur) mysql Tabellen-Daten direkt zu bearbeiten (einfügen, ändern)
+und dabei sehr einfach zu konfigurieren, welche Felder in der Ausgabe angezeigt 
+werden sollen und welche davon editierbar sind
+
+- Feature: zum aktualisieren von Daten bei Änderungen kann auch ein kombinierter Primärschlüssel 
+angegeben werden, wenn es kein ID Feld gibt (zB vorname, nachname, adresse)
