@@ -75,12 +75,12 @@ $(document).ready(function() {
       elements_per_page : 10,
       delete_permitted : true,
       create_permitted : true,
-      //init_page : 3,
+      init_page : 3, // or whaver
       codebase : './', // where jQDB sources are located; in most cases this prop can be bypassed
       //row_delete_markup : '<b title="DELETE">X</b>',
       paging_entry_markup : '<b title="PAGE %num">%num</b>',
       prompt_before_delete : 'Are you sure?', // [false | string | <UNSET/property completely omitted>] ; don't use true
-      //prompt_before_delete : false,
+      prompt_before_delete : false,
       callbacks : {
          dataLoaded : function(res) {
             //console.info(res);
@@ -103,7 +103,7 @@ $(document).ready(function() {
 All this demo stuff is also included in the archive you can download
 
 <h3>Purpose of this jQuery Plugin</h3>
-This plugnin shall serve an - **easy to use** - way to create generic inline editing areas within any of your pages for data which is autoloaded from a relational Database-Table through a predefined connector. Currently there is only a mySQL connector but it shall be simple to add more connectors for postgresql or what ever needed.
+This plugin shall serve an - **easy to use** - way to create generic inline editing areas within any of your pages for data which is autoloaded from a relational Database-Table through a predefined connector. Currently there is only a mySQL connector but it shall be simple to add more connectors for postgresql or what ever needed.
 
 <h3>Now once again... Why not simply use phpMyAdmin? Whats the feature? Whats the difference?</h3>
 The tiny edit areas which can be created with jQDB are none-competing with phpMyAdmin in any way. They are nothing more then inline table editors.<br/>
