@@ -6,12 +6,12 @@ Well, massive headline. Now something about it.
 My story begins with the search for a plugin-like tool... something I need in a non-generic form again and again from time to time:
 **simple, direct and mostly unfiltered automatic inline editing of (relational) Database-Table data within any  Web-Page** (formally in  Admin/Config Backends)
 
-<h3>And this is what the search resulted in</h3>
+<h3>And this is what I came up with due the none successful search for something that fits my needs</h3>
 <img src="https://cloud.githubusercontent.com/assets/4697715/10541073/5b3a420a-740e-11e5-8a9b-148e70a9db64.png" alt="" />
 
 this screenshot show what jQDB creates from the following test structure and it's contained data:
 
-```
+```sql
 CREATE TABLE IF NOT EXISTS `test_1` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `foo` varchar(200) COLLATE utf8_bin NOT NULL,
@@ -21,7 +21,85 @@ CREATE TABLE IF NOT EXISTS `test_1` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 ```
-the only thing needed is some configuration which you can read about in the wiki
+the only thing needed is some configuration which you can read about in the wiki.
+
+And here is what the concrete configuration for this result looks like:
+
+```javascript
+$(document).ready(function() {
+
+   $('table.jQDB').jQDB({
+      //connector            : 'mysql', // can be omitted - the default connector is mysql
+      db                   : 'test',
+      table                : 'test_1',
+      primary_key_fields   : ['id'], //['foo','bar'], // the id field(s) of the table declared using an array.. example: composed PK from ['name','surname','address']
+      
+      fields : {
+         // fields that shall not be displayed may simply be omitted in the conf
+         //id : {
+             //editable : false
+         //},
+         foo : {
+            editable : true,
+            type : 'string',
+         },
+         bar : {
+            editable : true,
+            type : 'int',
+            label : 'bar!!'
+         },
+         some_bool : {
+            editable : true,
+            type : 'bool'
+         },
+         dropdown : {
+            editable : true,
+            type : 'select',
+            select_elements : [
+               '',
+               'foo',
+               'bar',
+               'quxx',
+               'bla'
+            ],
+            select_free_edit : true // enables to right click the select box to enter a free value
+         }
+      },
+      //order_by : ['foo', 'ASC'],
+      condition : [
+         //['foo', 'LIKE', '%test%', 'OR'],
+         //['bar', 'LIKE', '%test%']
+         //['id', '=', 66]
+      ],
+      elements_per_page : 10,
+      delete_permitted : true,
+      create_permitted : true,
+      //init_page : 3,
+      codebase : './', // where jQDB sources are located; in most cases this prop can be bypassed
+      //row_delete_markup : '<b title="DELETE">X</b>',
+      paging_entry_markup : '<b title="PAGE %num">%num</b>',
+      prompt_before_delete : 'Are you sure?', // [false | string | <UNSET/property completely omitted>] ; don't use true
+      //prompt_before_delete : false,
+      callbacks : {
+         dataLoaded : function(res) {
+            //console.info(res);
+         },
+         updateSuccess : function(res) {
+            //console.info(res);
+         },
+         insertSuccess : function (res) {
+            //console.info(res);
+         },
+         deleteSuccess : function (res) {
+            //console.info(res);
+         }
+      }
+   });
+
+});
+```
+
+All this demo stuff is also included in the archive you can download
 
 <h3>Purpose of this jQuery Plugin</h3>
 This plugnin shall serve an - **easy to use** - way to create generic inline editing areas within any of your pages for data which is autoloaded from a relational Database-Table through a predefined connector. Currently there is only a mySQL connector but it shall be simple to add more connectors for postgresql or what ever needed.
@@ -40,3 +118,4 @@ I wrote this plugin for backends which are only used by your self or people you 
 <h3>Compatibility</h3>
 * Tested in Chrome and Firefox (under ubuntu)
 * Tested with jQuery 2.1.1
+* Tested with php 5.6.2
