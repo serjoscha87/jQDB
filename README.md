@@ -104,6 +104,11 @@ All this demo stuff is also included in the archive you can download
 <h3>Purpose of this jQuery Plugin</h3>
 This plugnin shall serve an - **easy to use** - way to create generic inline editing areas within any of your pages for data which is autoloaded from a relational Database-Table through a predefined connector. Currently there is only a mySQL connector but it shall be simple to add more connectors for postgresql or what ever needed.
 
+<h3>Now once again... Why not simply use phpMyAdmin? Whats the feature? Whats the difference?</h3>
+The tiny edit areas which can be created with jQDB are none-competing with phpMyAdmin in any way. They are nothing more then inline table editors.<br/>
+**The only advantage is: you can put these editor areas in every page on every spot**<br/>
+Want them within an option tab of the setting section of your page? No problem! Want more of these on your page to edit multiple tables? No problem! For any bigger needs this plugin in no match for your problem.
+
 <h3>Requirements</h3>
 * This plugin **needs** jQuery (devoloped with version 2.1.1). Optionally you can add jQuey-ui to your project but that's **not** necessary and is only needed for a single feedback (a short "success" highlight when you insert a fresh new row). Without jquery-ui you will be missing that one hapical effect. If you dont want to include the giant jquery-ui pack you can also download a custom version only containing the effect core and "highlight". In that case you won't even need the stylesheets or something.
 
