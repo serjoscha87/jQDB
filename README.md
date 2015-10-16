@@ -109,6 +109,12 @@ The tiny edit areas which can be created with jQDB are none-competing with phpMy
 **The only advantage is: you can put these editor areas in every page on every spot**<br/>
 Want them within an option tab of the setting section of your page? No problem! Want more of these on your page to edit multiple tables? No problem! For any bigger needs this plugin in no match for your problem.
 
+<h3>Styling</h3>
+You think the layout is awful? No problem, the stylesheet coming along shall only demonstrate what everything could look like. It should be no problem defining own styles, changing colors or whatever.
+
+<h3>Documentation</h3>
+The documentation may be found in the github project wiki
+
 <h3>Requirements</h3>
 * This plugin **needs** jQuery (devoloped with version 2.1.1). Optionally you can add jQuey-ui to your project but that's **not** necessary and is only needed for a single feedback (a short "success" highlight when you insert a fresh new row). Without jquery-ui you will be missing that one hapical effect. If you dont want to include the giant jquery-ui pack you can also download a custom version only containing the effect core and "highlight". In that case you won't even need the stylesheets or something.
 
