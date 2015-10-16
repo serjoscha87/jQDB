@@ -25,7 +25,7 @@ class MySQLConnector extends bConnector implements iConnector {
          return array('success' => true);
       }catch(\PDOException $e) {
          // when auth fails
-         return array('success' => false, 'error_str' => 'connection failed due wrong connection data');
+         return array('success' => false, 'error_str' => 'database connection failed due wrong server-authentication data');
       }
    }
    
@@ -36,8 +36,8 @@ class MySQLConnector extends bConnector implements iConnector {
     */
    public function loadTableData($data) {
       $d = new ParameterObject($data);
-
-      $fields = implode(', ', array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS)));
+      
+      $fields = implode(', ', array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS))); // fields to show
       
       $where_condition = 'WHERE ';
       foreach ($d->getAttribute(PO::ATTR_CONDITION,array()) as $condition_row) {
@@ -69,7 +69,7 @@ class MySQLConnector extends bConnector implements iConnector {
       else
          return array( // something went wrong
              'success' => false, 
-             'error_str' => $this->dbh->errorInfo()
+             'error_str' => sprintf('Failure due fetching the table Data: %s',$this->dbh->errorInfo()[2])
          );
    }
    
@@ -83,16 +83,15 @@ class MySQLConnector extends bConnector implements iConnector {
                $d->getAttribute(PO::ATTR_CHANGED_FIELD_NEW_VALUE),
                $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA)));
 
-      $this->dbh->exec($qry);
+      //$this->dbh->exec($qry);
+      
+      return array('success' => $this->dbh->exec($qry));
    }
    
    public function insertRow($data) {
       $d = new ParameterObject($data);
-      
-      $insDat = array();
-      parse_str($d->getAttribute(PO::ATTR_INSERT_DATA), $insDat);
 
-      $fieldSetterString = $this->easyBuildQueyClause($insDat,',');
+      $fieldSetterString = $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_INSERT_DATA),',');
        
       $qry = sprintf('INSERT INTO %s SET %s', $d->getAttribute(PO::ATTR_TABLE), $fieldSetterString);
 

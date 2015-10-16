@@ -1,18 +1,31 @@
+/*
+* These are some default styles which make the jQDB tables look "ok".
+* Of course you are able to completly omit these styles (by not loading this stylesheet, or not giving the class "jQDB" to your table) or you can just 
+* overload them to suit your needs. 
+*
+* You are completely free in what you are doing.
+*
+* Note: this is a "quick hack" stylesheet expecting the client to be a browser which can work with CSS3 props (this sheet is makeing use of box shadows, border radius etc...)
+*/
+
 /* SIMPLE STYLES */
-table.jQDB, table.jQDB td {
+table.jQDB,
+table.jQDB tr td {
    border : 1px solid #DDD;
    border-radius: 3px;
    font-family: verdana,arial;
 }
 
-table.jQDB tr:nth-child(even) * {
+table.jQDB tr:nth-child(even) td {
    background-color: #EEE;
 }
 
 table.jQDB tr input {
    opacity: 0.7;
+   border: 0px;
+   background-color: transparent;
 }
-table.jQDB tr input[type="checkbox"] {
+table.jQDB tr input[type="checkbox"] { /* do not use opacity for checkboxes.. looks uncool */
    opacity: 1;
 }
 table.jQDB tr input:focus {
@@ -21,11 +34,17 @@ table.jQDB tr input:focus {
    opacity: 1;
 }
 
-table.jQDB input {
+table.jQDB tr select {
+   width: 100%;
    border: 0px;
+   background-color: transparent;
+}
+table.jQDB tr select:focus {
+   border: 0px;
+   outline: 0px;
 }
 
-table.jQDB .jqdb-paging-button {
+table.jQDB a.jqdb-paging-button {
    border: 1px solid #AAA;
    padding: 5px;
    background-color: #EEE;
@@ -45,14 +64,17 @@ table.jQDB .jqdb-paging-button.active {
 }
 
 /* CUSTOM DEMO STYLES */
-table.jQDB tr .jqdb-delete-row-button {
+table.jQDB tr td.jqdb-delete-row-button {
    background-color: darkred;
    color: white;
    text-align: center;
    cursor: pointer;
 }
 
-table.jQDB .jqdb-paging {position: relative;}
+table.jQDB tr td.jqdb-paging {
+   position: relative; /* so sub elems may use absolute positioning */
+   background-color: white;
+}
 table.jQDB .jqdb-paging .jqdb-entry-counter {
    position: absolute;
    bottom: 0px;
@@ -65,7 +87,7 @@ table.jQDB .jqdb-paging .jqdb-entry-counter {
    padding-left: 3px;
 }
 
-/* HIDING ELEM COUNTER */
+/* EXAMPLE: HIDING ELEM COUNTER */
 /*table.jQDB .jqdb-entry-counter {
    display: none;
 }*/

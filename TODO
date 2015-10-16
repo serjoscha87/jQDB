@@ -1,2 +1,3 @@
 - automatische Feldkonfiguration ist noch implementiert (grundzüge stehen) -> Config Prop: "autoFields"
 - ermöglichen nach mehreren Feldern zu sortieren (zB ORDER BY a,b,c DESC ; aktuell ist nur ein sortier-Feld möglich)
+- wenn delete_permitted, etc aus ist, werden die dafür zuständigen Kontrollelemente bloß ausgeblendet. Über den Ajax Request, den die besagten Elemente auslösen würde, kann dennoch gelöscht und bearbeitet werden

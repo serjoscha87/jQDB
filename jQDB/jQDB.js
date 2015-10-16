@@ -1,19 +1,17 @@
-/*
- * Note: Error are printed to the console
- */
 (function ($) {
+
    $.fn.jQDB = function (options) {
       
       var selectedElement = this;
       
       if(!selectedElement.is('table'))
-         return console.error("Please use a <table> as base DOM Element for jQDB, not >"+selectedElement.prop("tagName")+"<");
+         return publishError("Please use a <table> as base DOM Element for jQDB, not >"+selectedElement.prop("tagName")+"<");
       
       if(typeof options.fields === 'undefined')
-         return console.error("No fields were configured for selection");
+         return publishError("No fields were configured for view-selection. Please do so. (config property 'fields')");
 
       if(typeof options.primary_key_fields === 'undefined')
-         return console.error("No primary keys were configured for the queriess selection");
+         return publishError("No primary keys were configured. Please do so. (config property 'primary_key_fields')");
       
       /*
        * Default config values
@@ -46,33 +44,34 @@
       /*
        * LOAD data and build complete behaviour stracture 
        */
-      var loadData = function(page) {
+      var loadData = function(page, internal_callback) {
          options['page'] = page; // make the selected page beeing a part of the options that are posted to the db connector
-         selectedElement.find('tr').remove(); // remove previous markup when paging nav is used
          $.ajax(options.codebase + 'jQDB/generic_connector_factory.php', {
             data : {
                action : 'load',
-               data : options
+               options : options
             },
             dataType : 'json',
             type : 'post',
             //async : true, 
             success: function(res) {
                
-               // catch errors for connect and loadData
-               if(!res.success){
-                  console.error(res.error_str);
-                  return;
-               }
+               selectedElement.find('tr').remove(); // remove previous markup when paging nav is used
+               
+               if(!res.success) // catch errors for connect and loadData
+                  return publishError(res.error_str);
                
                // Render table header
                var row = $(document.createElement('tr'));
                var i=0; // for the col class name
                $.each(options.fields, function(k,v) {
-                  $(document.createElement('th'))
-                          .addClass('col-'+(i++))
-                          .html(v.label || k)
-                          .appendTo(row);
+                  if(Object.keys(v).length===0) // throw out fields without configuration ('editable' for example) for they wont be submitted by jquery
+                     delete options.fields[k];
+                  else
+                     $(document.createElement('th'))
+                             .addClass('col-'+(i++))
+                             .html(v.label || k)
+                             .appendTo(row);
                });
                selectedElement.append(row);
 
@@ -82,37 +81,69 @@
                    * ROWS
                    */
                   var row = $(document.createElement('tr'));
+                  var i=0;
                   $.each(v, function(k2,v2) {
                      /*
                       * COLS / FIELDS AND THEIR INNER
-                      */
+                      */                     
                      if(typeof options.fields[k2] === "undefined")
                         return; // prevent printf of mysql-data-fields that were not selected by the user-config (but returned by the qry result)
 
-                     var editable = options.fields[k2].editable;
+                     var editable = options.fields[k2].editable || false; // default when not configured -> not editable
                      var cellContent = null;
                      if (editable) {
+                        
                         var type = options.fields[k2].type || 'string'; // default type: string (when none is defined)
 
-                        cellContent = $(document.createElement('input'))
-                                          .val(v2)
-                                          .change(function () {
-                                             var additional_data = {
-                                                pk_data : $(this).parent().data('pk_data'), // contains data that can be used to build a WHERE clause for a query (field1=>it's value ; field2=>also it's value [...])
-                                                changed_field : $(this).parent().data('field'),
-                                                changed_nu_val : type==='bool' ? ($(this).is(':checked') ? 1 : 0) : $(this).val()
-                                             };
-                                             /*
-                                              * UPDATE
-                                              */
-                                             $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
-                                                action : 'update',
-                                                data : $.extend(options, additional_data),
-                                             }, function(res) {
-                                                cellContent.fadeOut(150).fadeIn(150); // visual save feedback
-                                                callbacks.updateSuccess.call(this, res);
-                                             }, 'json');
-                                          });
+                        if(type === 'select') {
+                           var select_elements = options.fields[k2].select_elements.slice(); // slice: this is a hack; see http://stackoverflow.com/questions/7486085/copying-array-by-value-in-javascript
+                           if(typeof select_elements==='undefined') return publishError('You configured a select box but did not tell any fixed drop down options. Please do so using >select_elements< next to type >select<');
+                           cellContent = $(document.createElement('select'));
+                           if(options.fields[k2].select_free_edit) { // build right click functionality for the "select_free_edit" config property
+                              select_elements.push(v2); // add the free value
+                              cellContent.on('contextmenu', function (e) {
+                                 if (e.button === 2) {
+                                    var free_val = prompt('Value?')
+                                    if(free_val){
+                                       cellContent.find('option:selected').text(free_val);
+                                       cellContent.change();
+                                    }
+                                    return false;
+                                 }
+                                 return true;
+                              }); 
+                           }
+                           $.each(select_elements, function(sk,sv) {
+                              $(document.createElement('option'))
+                                      .text(sv)
+                                      .attr('selected', sv===v2) // mark selected if needed
+                                      .appendTo(cellContent)
+                           });
+                        }
+                        else{
+                           cellContent = $(document.createElement('input'))
+                                         .val(v2);
+                        }
+                        /*
+                         * bind change event to the input
+                         */ 
+                        cellContent.change(function () {
+                           var additional_data = {
+                              pk_data : $(this).parent().data('pk_data'), // contains data that can be used to build a WHERE clause for a query (field1=>it's value ; field2=>also it's value [...])
+                              changed_field : $(this).parent().data('field'),
+                              changed_nu_val : type==='bool' ? ($(this).is(':checked') ? 1 : 0) : (type==='select' ? $(this).find(':selected').text() : $(this).val())
+                           };
+                           /*
+                            * UPDATE
+                            */
+                           $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+                              action : 'update',
+                              options : $.extend(options, additional_data),
+                           }, function(res) {
+                              cellContent.fadeOut(150).fadeIn(150); // visual save feedback
+                              callbacks.updateSuccess.call(this, res);
+                           }, 'json');
+                        });
 
                         // restrict input to only numbers
                         if(type==='int'){
@@ -129,7 +160,7 @@
                            });
                         }
 
-                        if(type==='bool'){
+                        if(type==='bool'){ // change type of the input to a checkbox
                            cellContent.attr('type', 'checkbox');
                            cellContent.attr('checked', v2==="1" ); // mark checked / unchecked according to the db
                         }
@@ -141,6 +172,7 @@
 
                      var field = $(document.createElement('td'))
                              .click(function(){$(this).find('input').focus();}) // delegate focus when the inpu is smaller then the cell
+                             .addClass('col-'+(i++))
                              .append(cellContent)
                              .appendTo(row);
 
@@ -163,8 +195,7 @@
                         .html(options.row_delete_markup)
                         .data('pk_data', null)
                         .addClass('jqdb-delete-row-button')
-                        .click(function (){
-                           //var container_row = $(this).parent('tr'); // used to remove when the db delete was successfully
+                        .click(function () {
                            var pk_data = {};
                            $.each(options.primary_key_fields, function (k2,v2) {
                               pk_data[v2] = v[v2];
@@ -184,7 +215,7 @@
                            if(doDelete) {
                               $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                                  action : 'delete',
-                                 data : $.extend(options, additional_data),
+                                 options : $.extend(options, additional_data),
                               }, function(res) {
                                  callbacks.deleteSuccess.call(this, res);
                                  if(res.success === 1)
@@ -202,42 +233,67 @@
                 * append a row for beeing able to insert new data into the db
                 */ 
                if(options.create_permitted) {
-                  var row = $(document.createElement('tr'));
-                  $.each(options.fields, function (k,v){
+                  var row = $(document.createElement('tr'))
+                              .attr('id', 'insert-row-row');
+                  var i=0;
+                  $.each(options.fields, function (k,v) {
                      $(document.createElement('td'))
+                        .addClass('col-'+(i++))
                         .append(
-                           $(document.createElement('input'))
-                           .attr("placeholder", v.type==="bool"?'1|0':"+")
-                           .attr("maxlength", (v.type==="bool"?'1':(v.type==="int"?'10':'')))
-                           .css('width', (v.type==="bool"?'18px':'auto')) // make bool inputs smaller
+                           $(document.createElement(v.type === 'select' ? 'select' : 'input'))
+                           .attr("placeholder", "+")
+                           .attr("maxlength", v.type==="int"?'10':'')
                            .attr("name", k)
-                           //.attr("type", v.type==="bool"?'checkbox':'text')
-                           .keypress(function (e) {
+                           .attr("type", (v.type==="bool"?'checkbox': 'text')) // remember: unticked checkboxes wont be submitted
+                           .data("type", v.type) // the real type that comes configed in js 
+                           .each(function() { // hack for conditional working on the temp input-dom-element. This enables us to have a real function body. Dont be confused. The function / loop will for every element only be run once
+                              var de = $(this);
+                              if(de.data('type') === 'select') {
+                                 v.select_elements.forEach(function(v,k) {
+                                    $(document.createElement('option'))
+                                            .text(v)
+                                            .appendTo(de);
+                                 });
+                              }
+                           })
+                           .keypress(function (e) { // within any input
                               
                               // prevent text in int fields
                               if(!String.fromCharCode(e.which).match(/\d/) && v.type==="int" && e.which !== 13)
                                  e.preventDefault();
                               
-                              if(e.keyCode === 13){ // on enter-button
+                              if(e.keyCode === 13) { // on enter-button (for any input)
                                  // prevent inserting complete empty rows
                                  var textOverAll = '';
-                                 var newRowInputs = $(this).parents('tr').find('input');
-                                 $.each(newRowInputs, function() {
-                                    textOverAll += $(this).val().trim();
+                                 var newRowInputs = $(this).parents('tr').find('input,select');
+                                 var additional_data = { insert_data : {} }; // filled within loop
+                                 $.each(newRowInputs, function(num_key, dom_input) {
+                                    var di = $(dom_input);
+                                    var val = ( // find the val according to the current element type (simple input, select / checkbox)
+                                            di.data('type') === 'bool' ? (di.is(':checked')?1:0) : 
+                                                (di.data('type') === 'select' ? di.find('option:selected').text() : di.val() )
+                                    );
+                                    // assign additional data for posting
+                                    additional_data.insert_data[di.attr('name')] = val;
+                                    // build "validation string"
+                                    if(di.data('type') === 'string' || di.data('type') === 'int')
+                                       textOverAll += val;
                                  });
-                                 if(textOverAll.length === 0) {
-                                    newRowInputs.css('border', '2px solid red');
+                                 if(textOverAll.length === 0) { // visual feedback for a complete empty row
+                                    $(this).parents('tr').find('td').not(':last').css('border', '2px solid red');
                                     return;
                                  }
-                                 // if the "valid-check" was successful: post the data to the connector to insert a new row
-                                 var additional_data = { insert_data : $(this).parents('tr').find('input').serialize() };
+
+                                 // if the "valid-check" (at least one text input is filled) was successful: post the data to the connector to insert a new row
                                  $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                                     action : 'insert',
-                                    data : $.extend(options, additional_data),
+                                    options : $.extend(options, additional_data),
                                  }, function(res) {
-                                    loadData(page);
+                                    loadData(page, function(){
+                                       $('#insert-row-row td').effect('highlight', {color:'lime'}); // .animate(.. with colors and .effect('highlight... ONLY work when jQuery UI is loaded with efect-core (and those specific effects needed)
+                                    });
 
-                                    // callback
+                                    // call up callback
                                     callbacks.insertSuccess.call(this, res);
                                  });
                               }
@@ -246,6 +302,14 @@
                         .click(function(){$(this).find('input').focus();})
                         .appendTo(row);
                   });
+                  $(document.createElement('td')) // this td can also be clicked to omit pressing enter in any field
+                          .html('<b>+</b>')
+                          .attr('title', 'Add this as a new row')
+                          .css('cursor', 'pointer')
+                          .click(function () {
+                              $(this).parents('tr').find('td > *').eq(0).trigger($.Event('keypress', { keyCode: 13 } ));
+                          })
+                          .appendTo(row);
                   selectedElement.append(row);
                }
 
@@ -297,17 +361,29 @@
                      .append(entry_counter_row)
                      .appendTo(selectedElement);
                }
-               
 
                // Exec Data loaded callback
                callbacks.dataLoaded.call(this, res);
+               
+               // exec the internal callback function that may be appended
+               if(typeof internal_callback === 'function')
+                  internal_callback.call(this);
 
-            } // success
-         }); // .ajax
+            } // end of success-callback
+         }); // end of .ajax(..
          
       }; // loda data
       loadData(options.init_page-1); // load the data in page load
       
+      function publishError(msg) {
+         $(document.createElement('div'))
+                 .text('jQDB: '+msg)
+                 .addClass('jQDB-error') // so eventual error msgs can be hidden via css
+                 .css({'color':'red'})
+                 .appendTo($('body'));
+      }
+      
       return this;
    };
 }(jQuery));
+

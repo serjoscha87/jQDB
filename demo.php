@@ -4,9 +4,10 @@
       <meta charset="UTF-8">
       <title>jQDB - demo</title>
       <script src="jquery-2.1.1.min.js"></script>
-      <script src="jQDB/jQDB.js" ></script>
-      <script src="script.js" ></script>
-      <link type="text/css" href="jQDB/jQDB.css" rel="stylesheet" />
+      <script src="jquery-ui.min.js"></script>
+      <script src="jQDB/jQDB.js" ></script><!-- the script lib -->
+      <script src="script.js" ></script><!-- your custom script to make configuration and definitions -->
+      <link type="text/css" href="jQDB/jQDB.css" rel="stylesheet" /><!-- default styles from and for jQDB -->
       <style type="text/css"></style>
    </head>
    <body>
