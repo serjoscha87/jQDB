@@ -20,21 +20,155 @@
 
     <section class="main-content">
       <h1>
-<a id="jqdb---jquery-inline-db-table-editor" class="anchor" href="#jqdb---jquery-inline-db-table-editor" aria-hidden="true"><span class="octicon octicon-link"></span></a>jQDB - jQuery inline DB Table Editor</h1>
+<a id="jqdb---jquery-inline-database-table-editor-plugin" class="anchor" href="#jqdb---jquery-inline-database-table-editor-plugin" aria-hidden="true"><span class="octicon octicon-link"></span></a>jQDB - jQuery inline Database-Table Editor plugin</h1>
+
+<p>Well, massive headline. Now something about it.</p>
 
 <h3>
 <a id="prolog" class="anchor" href="#prolog" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prolog</h3>
 
-<p>Well... My story begins with the search for something I reuse in a non-generic form again and again from time to time:
-simple and direct inline editing of (relational) Database-Data within a Web-Page (formally Admin/Config Backends)</p>
+<p>My story begins with the search for a plugin-like tool... something I need in a non-generic form again and again from time to time:
+<strong>simple, direct and mostly unfiltered automatic inline editing of (relational) Database-Table data within any  Web-Page</strong> (formally in  Admin/Config Backends)</p>
+
+<h3>
+<a id="and-this-is-what-i-came-up-with-due-the-none-successful-search-for-something-that-fits-my-needs" class="anchor" href="#and-this-is-what-i-came-up-with-due-the-none-successful-search-for-something-that-fits-my-needs" aria-hidden="true"><span class="octicon octicon-link"></span></a>And this is what I came up with due the none successful search for something that fits my needs</h3>
+
+<p><img src="https://cloud.githubusercontent.com/assets/4697715/10541073/5b3a420a-740e-11e5-8a9b-148e70a9db64.png" alt=""></p>
+
+<p>this screenshot show what jQDB creates from the following test structure and it's contained data:</p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">CREATE</span> <span class="pl-k">TABLE</span> <span class="pl-en">IF</span> NOT EXISTS <span class="pl-s"><span class="pl-pds">`</span>test_1<span class="pl-pds">`</span></span> (
+  <span class="pl-s"><span class="pl-pds">`</span>id<span class="pl-pds">`</span></span> <span class="pl-k">int</span>(<span class="pl-c1">11</span>) <span class="pl-k">NOT NULL</span> AUTO_INCREMENT,
+  <span class="pl-s"><span class="pl-pds">`</span>foo<span class="pl-pds">`</span></span> <span class="pl-k">varchar</span>(<span class="pl-c1">200</span>) COLLATE utf8_bin <span class="pl-k">NOT NULL</span>,
+  <span class="pl-s"><span class="pl-pds">`</span>bar<span class="pl-pds">`</span></span> <span class="pl-k">int</span>(<span class="pl-c1">11</span>) <span class="pl-k">NOT NULL</span>,
+  <span class="pl-s"><span class="pl-pds">`</span>some_bool<span class="pl-pds">`</span></span> <span class="pl-k">tinyint</span>(<span class="pl-c1">1</span>) <span class="pl-k">NOT NULL</span>,
+  <span class="pl-s"><span class="pl-pds">`</span>dropdown<span class="pl-pds">`</span></span> <span class="pl-k">varchar</span>(<span class="pl-c1">80</span>) COLLATE utf8_bin <span class="pl-k">NOT NULL</span>,
+  <span class="pl-k">PRIMARY KEY</span> (<span class="pl-s"><span class="pl-pds">`</span>id<span class="pl-pds">`</span></span>)
+) ENGINE<span class="pl-k">=</span>InnoDB  DEFAULT CHARSET<span class="pl-k">=</span>utf8 COLLATE<span class="pl-k">=</span>utf8_bin;</pre></div>
+
+<p>the only thing needed is some configuration which you can read about in the wiki.</p>
+
+<p>And here is what the concrete configuration for this result looks like:</p>
+
+<div class="highlight highlight-source-js"><pre>$(<span class="pl-c1">document</span>).ready(<span class="pl-k">function</span>() {
+
+   $(<span class="pl-s"><span class="pl-pds">'</span>table.jQDB<span class="pl-pds">'</span></span>).jQDB({
+      <span class="pl-c">//connector            : 'mysql', // can be omitted - the default connector is mysql</span>
+      db                   <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>test<span class="pl-pds">'</span></span>,
+      table                <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>test_1<span class="pl-pds">'</span></span>,
+      primary_key_fields   <span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>], <span class="pl-c">//['foo','bar'], // the id field(s) of the table declared using an array.. example: composed PK from ['name','surname','address']</span>
+
+      fields <span class="pl-k">:</span> {
+         <span class="pl-c">// fields that shall not be displayed may simply be omitted in the conf</span>
+         <span class="pl-c">//id : {</span>
+             <span class="pl-c">//editable : false</span>
+         <span class="pl-c">//},</span>
+         foo <span class="pl-k">:</span> {
+            editable <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+            type <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>string<span class="pl-pds">'</span></span>,
+         },
+         bar <span class="pl-k">:</span> {
+            editable <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+            type <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>int<span class="pl-pds">'</span></span>,
+            label <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>bar!!<span class="pl-pds">'</span></span>
+         },
+         some_bool <span class="pl-k">:</span> {
+            editable <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+            type <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>bool<span class="pl-pds">'</span></span>
+         },
+         dropdown <span class="pl-k">:</span> {
+            editable <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+            type <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>select<span class="pl-pds">'</span></span>,
+            select_elements <span class="pl-k">:</span> [
+               <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>,
+               <span class="pl-s"><span class="pl-pds">'</span>foo<span class="pl-pds">'</span></span>,
+               <span class="pl-s"><span class="pl-pds">'</span>bar<span class="pl-pds">'</span></span>,
+               <span class="pl-s"><span class="pl-pds">'</span>quxx<span class="pl-pds">'</span></span>,
+               <span class="pl-s"><span class="pl-pds">'</span>bla<span class="pl-pds">'</span></span>
+            ],
+            select_free_edit <span class="pl-k">:</span> <span class="pl-c1">true</span> <span class="pl-c">// enables to right click the select box to enter a free value</span>
+         }
+      },
+      <span class="pl-c">//order_by : ['foo', 'ASC'],</span>
+      condition <span class="pl-k">:</span> [
+         <span class="pl-c">//['foo', 'LIKE', '%test%', 'OR'],</span>
+         <span class="pl-c">//['bar', 'LIKE', '%test%']</span>
+         <span class="pl-c">//['id', '=', 66]</span>
+      ],
+      elements_per_page <span class="pl-k">:</span> <span class="pl-c1">10</span>,
+      delete_permitted <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+      create_permitted <span class="pl-k">:</span> <span class="pl-c1">true</span>,
+      <span class="pl-c">//init_page : 3,</span>
+      codebase <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>./<span class="pl-pds">'</span></span>, <span class="pl-c">// where jQDB sources are located; in most cases this prop can be bypassed</span>
+      <span class="pl-c">//row_delete_markup : '&lt;b title="DELETE"&gt;X&lt;/b&gt;',</span>
+      paging_entry_markup <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>&lt;b title="PAGE %num"&gt;%num&lt;/b&gt;<span class="pl-pds">'</span></span>,
+      prompt_before_delete <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Are you sure?<span class="pl-pds">'</span></span>, <span class="pl-c">// [false | string | &lt;UNSET/property completely omitted&gt;] ; don't use true</span>
+      <span class="pl-c">//prompt_before_delete : false,</span>
+      callbacks <span class="pl-k">:</span> {
+         <span class="pl-en">dataLoaded</span> <span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">res</span>) {
+            <span class="pl-c">//console.info(res);</span>
+         },
+         <span class="pl-en">updateSuccess</span> <span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">res</span>) {
+            <span class="pl-c">//console.info(res);</span>
+         },
+         <span class="pl-en">insertSuccess</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">res</span>) {
+            <span class="pl-c">//console.info(res);</span>
+         },
+         <span class="pl-en">deleteSuccess</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">res</span>) {
+            <span class="pl-c">//console.info(res);</span>
+         }
+      }
+   });
+
+});</pre></div>
+
+<p>All this demo stuff is also included in the archive you can download</p>
 
 <h3>
 <a id="purpose-of-this-jquery-plugin" class="anchor" href="#purpose-of-this-jquery-plugin" aria-hidden="true"><span class="octicon octicon-link"></span></a>Purpose of this jQuery Plugin</h3>
 
-<p>This plugnin shall serve an - easy to use - way to create generic inline editing of data which is autoloaded through a connector</p>
+<p>This plugnin shall serve an - <strong>easy to use</strong> - way to create generic inline editing areas within any of your pages for data which is autoloaded from a relational Database-Table through a predefined connector. Currently there is only a mySQL connector but it shall be simple to add more connectors for postgresql or what ever needed.</p>
 
-<h1>
-<a id="strongly-under-construction" class="anchor" href="#strongly-under-construction" aria-hidden="true"><span class="octicon octicon-link"></span></a>...**STRONGLY UNDER CONSTRUCTION***...</h1>
+<h3>
+<a id="now-once-again-why-not-simply-use-phpmyadmin-whats-the-feature-whats-the-difference" class="anchor" href="#now-once-again-why-not-simply-use-phpmyadmin-whats-the-feature-whats-the-difference" aria-hidden="true"><span class="octicon octicon-link"></span></a>Now once again... Why not simply use phpMyAdmin? Whats the feature? Whats the difference?</h3>
+
+<p>The tiny edit areas which can be created with jQDB are none-competing with phpMyAdmin in any way. They are nothing more then inline table editors.<br>
+<strong>The only advantage is: you can put these editor areas in every page on every spot</strong><br>
+Want them within an option tab of the setting section of your page? No problem! Want more of these on your page to edit multiple tables? No problem! For any bigger needs this plugin in no match for your problem.</p>
+
+<h3>
+<a id="styling" class="anchor" href="#styling" aria-hidden="true"><span class="octicon octicon-link"></span></a>Styling</h3>
+
+<p>You think the layout is awful? No problem, the stylesheet coming along shall only demonstrate what everything could look like. It should be no problem defining own styles, changing colors or whatever.</p>
+
+<h3>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h3>
+
+<p>The documentation may be found in the github project wiki</p>
+
+<h3>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h3>
+
+<ul>
+<li><p>This plugin <strong>needs</strong> jQuery (devoloped with version 2.1.1). Optionally you can add jQuey-ui to your project but that's <strong>not</strong> necessary and is only needed for a single feedback (a short "success" highlight when you insert a fresh new row). Without jquery-ui you will be missing that one hapical effect. If you dont want to include the giant jquery-ui pack you can also download a custom version only containing the effect core and "highlight". In that case you won't even need the stylesheets or something.</p></li>
+<li><p>PHP (guess you better have any php5 installed)<br>
+This is needed for the logical server side which evaluates data and sends it to the db-server and receives it from there</p></li>
+<li><p><strong>MySQL</strong> as database platform: altough it should be easy to write a new one, currently there is only a mysql connector</p></li>
+</ul>
+
+<h4>
+<a id="note" class="anchor" href="#note" aria-hidden="true"><span class="octicon octicon-link"></span></a>Note</h4>
+
+<p>I wrote this plugin for backends which are only used by your self or people you really trust. There is a basic secure mode which should prevent SQL-Injections, choosing other tables then desired and malicious usage but there has <strong>never been a serious focus on maximum security</strong> when writing this. So really be careful when thinking where to put this plugin in.</p>
+
+<h3>
+<a id="compatibility" class="anchor" href="#compatibility" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compatibility</h3>
+
+<ul>
+<li>Tested in Chrome and Firefox (under ubuntu)</li>
+<li>Tested with jQuery 2.1.1</li>
+<li>Tested with php 5.6.2</li>
+</ul>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/serjoscha87/jQDB">jQuery inline Database editor Plugin</a> is maintained by <a href="https://github.com/serjoscha87">serjoscha87</a>.</span>
