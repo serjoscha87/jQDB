@@ -12,7 +12,7 @@ class Config implements iConfig {
    }
    
    public static function getPassword() {
-      return "foobar";
+      return "pass";
    }
    
    public static function getUsername() {
@@ -40,7 +40,6 @@ class Config implements iConfig {
               'some_bool'
               ),
           );
-      //return array();
    }
    
    public static function getValidDBs() {
