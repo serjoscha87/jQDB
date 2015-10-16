@@ -1,4 +1,4 @@
-<h1>jQDB - jQuery inline Database-Table Editor plugin</h1>
+<h1>[jQDB - jQuery inline Database-Table Editor plugin](http://serjoscha87.github.io/jQDB/)</h1>
 
 Well, massive headline. Now something about it.
 
