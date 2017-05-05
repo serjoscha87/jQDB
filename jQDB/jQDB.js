@@ -162,7 +162,7 @@
 
                         if(type==='bool'){ // change type of the input to a checkbox
                            cellContent.attr('type', 'checkbox');
-                           cellContent.attr('checked', v2==="1" ); // mark checked / unchecked according to the db
+                           cellContent.attr('checked', parseInt(v2)===1 ); // mark checked / unchecked according to the db
                         }
                      }
                      else {

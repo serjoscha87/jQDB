@@ -8,10 +8,7 @@
 namespace jQDB;
 use jQDB\ParameterObject AS PO;
 
-error_reporting(0); // for this script should always only return json -> warnings and errors would destroy everything
-
-if(is_readable($kintPath = '../../kint/Kint.class.php')) // debug lib (not required for use of jQDB) note to self: remove
-   include_once $kintPath;
+//error_reporting(0); // for this script should always only return json -> warnings and errors would destroy everything
 
 // inheritance
 require_once 'inheritance/iConnector.inter.php';
@@ -34,11 +31,11 @@ $connector = $cs->getConector($desired_connector); // try to select the connecto
 
 // host, username, password, db
 $authRes = $connector->authenticate(
-        Config::getHost(),
-        Config::getUsername(),
-        Config::getPassword(),
-        $dObj->getAttribute(PO::ATTR_DATABASE_NAME)
-        );
+   Config::getHost(), // this may be unnecessary in some cases (sqlite for example)
+   Config::getUsername(),
+   Config::getPassword(),
+   $dObj->getAttribute(PO::ATTR_DATABASE_NAME)
+);
 
 $checkRes = SecureModeHelper::checkTable($dObj->getAttribute(PO::ATTR_TABLE), $dObj);
 if(is_numeric($checkRes)) { // we are returned a string in valid case or an int in failure case

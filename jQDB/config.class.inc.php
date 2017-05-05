@@ -12,7 +12,7 @@ class Config implements iConfig {
    }
    
    public static function getPassword() {
-      return "pass";
+      return "";
    }
    
    public static function getUsername() {

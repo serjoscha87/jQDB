@@ -51,7 +51,7 @@ class ParameterObject {
     * @return type
     */
    public function getAttribute($attrib, $returnOnNull=null) {
-      return $this->data[$attrib]?$this->data[$attrib]:$returnOnNull;
+      return isset($this->data[$attrib])?$this->data[$attrib]:$returnOnNull;
    }
    
    public function __construct() {
