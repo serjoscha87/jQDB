@@ -1,5 +1,9 @@
 $(document).ready(function() {
 
+   /*
+    * NOTE: The sqlite demo may be more up to date according to configurations
+    */
+
    $('table.jQDB').jQDB({
       //connector            : 'mysql', // can be omitted - the default connector is mysql
       db                   : 'test',
@@ -14,6 +18,7 @@ $(document).ready(function() {
             editable : true,
             type : 'string',
             //label : 'foo!',
+            class : 'field-%field%'
          },
          bar : {
             editable : true,
@@ -28,11 +33,11 @@ $(document).ready(function() {
             editable : true,
             type : 'select',
             select_elements : [
-               '',
-               'foo',
-               'bar',
-               'quxx',
-               'bla'
+               {value:'', label:''},
+               {value:'foo', label:'foo'},
+               {value:'bar', label:'bar'},
+               {value:'quxx', label:'quxx'},
+               {value:'bla', label:'bla'}
             ],
             select_free_edit : true // enables to right click the select box to enter a free value
          }

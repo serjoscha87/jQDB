@@ -63,6 +63,10 @@ table.jQDB .jqdb-paging-button.active {
    text-shadow: 0px 0px 3px black;
 }
 
+table.jQDB .error-required {
+   outline: 2px solid red;
+}
+
 /* CUSTOM DEMO STYLES */
 table.jQDB tr td.jqdb-delete-row-button {
    background-color: darkred;

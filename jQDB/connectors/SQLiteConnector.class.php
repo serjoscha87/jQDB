@@ -24,7 +24,7 @@ class SQLiteConnector extends bConnector implements iConnector {
          return array('success' => true);
       }catch(\Exception $e) {
          // when auth fails
-         return array('success' => false, 'error_str' => 'database connection failed due wrong server-authentication data');
+         return array('success' => false, 'error_str' => 'could not open sqlite db');
       }
    }
    

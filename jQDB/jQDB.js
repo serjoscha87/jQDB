@@ -26,7 +26,9 @@
          row_delete_markup : '&otimes;', // may also contain html
          paging_entry_markup : '%num ',
          prompt_before_delete : 'Are you sure?',
-         codebase : './'
+         codebase : './',
+         editable_default : false, // when the "editable" configuration for fields are omitted: this will be used 
+         required_default : false // "" for required
       }, options);
       
       /*
@@ -89,7 +91,7 @@
                      if(typeof options.fields[k2] === "undefined")
                         return; // prevent printf of mysql-data-fields that were not selected by the user-config (but returned by the qry result)
 
-                     var editable = options.fields[k2].editable || false; // default when not configured -> not editable
+                     var editable = options.fields[k2].editable || options.editable_default; // default when not configured -> use default config option as val
                      var cellContent = null;
                      if (editable) {
                         
@@ -99,8 +101,9 @@
                            var select_elements = options.fields[k2].select_elements.slice(); // slice: this is a hack; see http://stackoverflow.com/questions/7486085/copying-array-by-value-in-javascript
                            if(typeof select_elements==='undefined') return publishError('You configured a select box but did not tell any fixed drop down options. Please do so using >select_elements< next to type >select<');
                            cellContent = $(document.createElement('select'));
+                           
                            if(options.fields[k2].select_free_edit) { // build right click functionality for the "select_free_edit" config property
-                              select_elements.push(v2); // add the free value
+                              //select_elements.push({value:v2, label:v2}); // add the free value
                               cellContent.on('contextmenu', function (e) {
                                  if (e.button === 2) {
                                     var free_val = prompt('Value?')
@@ -113,10 +116,12 @@
                                  return true;
                               }); 
                            }
+                           
                            $.each(select_elements, function(sk,sv) {
                               $(document.createElement('option'))
-                                      .text(sv)
-                                      .attr('selected', sv===v2) // mark selected if needed
+                                      .text(sv.label)
+                                      .val(sv.value)
+                                      .attr('selected', sv.label===v2) // mark selected if needed
                                       .appendTo(cellContent)
                            });
                         }
@@ -164,10 +169,20 @@
                            cellContent.attr('type', 'checkbox');
                            cellContent.attr('checked', parseInt(v2)===1 ); // mark checked / unchecked according to the db
                         }
+
+                        if(type==='string') {
+                           cellContent.attr('type', 'text');
+                        }
                      }
-                     else {
+                     else { // not editable
                         cellContent = $(document.createElement('span'))
                                           .text(v2);
+                     }
+                     
+                     cellContent.attr('data-field', k2);
+                     
+                     if(options.fields[k2].class) {
+                        cellContent.addClass(options.fields[k2].class.replace('%field%', k2));
                      }
 
                      var field = $(document.createElement('td'))
@@ -241,48 +256,53 @@
                         .addClass('col-'+(i++))
                         .append(
                            $(document.createElement(v.type === 'select' ? 'select' : 'input'))
-                           .attr("placeholder", "+")
+                           .attr("placeholder", v.placeholder || "+")
                            .attr("maxlength", v.type==="int"?'10':'')
                            .attr("name", k)
                            .attr("type", (v.type==="bool"?'checkbox': 'text')) // remember: unticked checkboxes wont be submitted
                            .data("type", v.type) // the real type that comes configed in js 
+                           .prop("required",  v.required || options.required_default)
                            .each(function() { // hack for conditional working on the temp input-dom-element. This enables us to have a real function body. Dont be confused. The function / loop will for every element only be run once
                               var de = $(this);
                               if(de.data('type') === 'select') {
                                  v.select_elements.forEach(function(v,k) {
                                     $(document.createElement('option'))
-                                            .text(v)
+                                            .text(v.label)
+                                            .val(v.value)
                                             .appendTo(de);
                                  });
                               }
                            })
                            .keypress(function (e) { // within any input
-                              
                               // prevent text in int fields
                               if(!String.fromCharCode(e.which).match(/\d/) && v.type==="int" && e.which !== 13)
                                  e.preventDefault();
                               
+                              var all_required_filled = true;
+                              
                               if(e.keyCode === 13) { // on enter-button (for any input)
-                                 // prevent inserting complete empty rows
-                                 var textOverAll = '';
                                  var newRowInputs = $(this).parents('tr').find('input,select');
                                  var additional_data = { insert_data : {} }; // filled within loop
                                  $.each(newRowInputs, function(num_key, dom_input) {
                                     var di = $(dom_input);
+                                    
+                                    di.removeClass('error-required'); // remove (perhaps) previously added error class 
+                                    
                                     var val = ( // find the val according to the current element type (simple input, select / checkbox)
                                             di.data('type') === 'bool' ? (di.is(':checked')?1:0) : 
                                                 (di.data('type') === 'select' ? di.find('option:selected').text() : di.val() )
                                     );
                                     // assign additional data for posting
                                     additional_data.insert_data[di.attr('name')] = val;
-                                    // build "validation string"
-                                    if(di.data('type') === 'string' || di.data('type') === 'int')
-                                       textOverAll += val;
+                                    
+                                    // check if current field is required and unset in order to show an error
+                                    if(di.is(':required') && val.length===0) {
+                                       all_required_filled = false;
+                                       di.addClass('error-required');
+                                    }
                                  });
-                                 if(textOverAll.length === 0) { // visual feedback for a complete empty row
-                                    $(this).parents('tr').find('td').not(':last').css('border', '2px solid red');
+                                 if(!all_required_filled)
                                     return;
-                                 }
 
                                  // if the "valid-check" (at least one text input is filled) was successful: post the data to the connector to insert a new row
                                  $.post(options.codebase + 'jQDB/generic_connector_factory.php', {

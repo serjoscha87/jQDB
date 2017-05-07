@@ -2,9 +2,11 @@ $(document).ready(function() {
 
    $('table.jQDB').jQDB({
       connector            : 'sqlite', // can be omitted - the default connector is mysql
-      db                   : 'test.sqlite',
+      db                   : '../test.sqlite',
       table                : 'test_1',
       primary_key_fields   : ['id'], //['foo','bar'], // the id field(s) of the table declared using an array.. example: composed PK from ['name','surname','address']
+      editable_default : false, // when the "editable" configuration for fields are omitted: this default will be used 
+      required_default : false, // same as above for required
       
       fields : {
 //         id : {
@@ -12,27 +14,33 @@ $(document).ready(function() {
 //         },
          foo : {
             editable : true,
+            required : true,
             type : 'string',
             //label : 'foo!',
+            class : 'field-%field%'
          },
          bar : {
             editable : true,
+            required : false,
             type : 'int',
-            label : 'bar!!'
+            label : 'bar!!',
+            class : 'foobar',
+            placeholder : 'custom placeholder'
          },
          some_bool : {
             editable : true,
-            type : 'bool'
+            type : 'bool',
+            class : 'foo bar'
          },
          dropdown : {
             editable : true,
             type : 'select',
             select_elements : [
-               '',
-               'foo',
-               'bar',
-               'quxx',
-               'bla'
+               {value:'', label:''},
+               {value:'foo', label:'foo'},
+               {value:'bar', label:'bar'},
+               {value:'quxx', label:'quxx'},
+               {value:'bla', label:'bla'}
             ],
             select_free_edit : true // enables to right click the select box to enter a free value
          }
