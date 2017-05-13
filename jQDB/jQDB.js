@@ -71,9 +71,10 @@
                      delete options.fields[k];
                   else
                      $(document.createElement('th'))
-                             .addClass('col-'+(i++))
-                             .html(v.label || k)
-                             .appendTo(row);
+                        .addClass('col-'+(i++))
+                        .addClass(v.type==='hidden'?'hidden':'')
+                        .html(v.label || k)
+                        .appendTo(row);
                });
                selectedElement.append(row);
 
@@ -82,13 +83,13 @@
                   /*
                    * ROWS
                    */
-                  var row = $(document.createElement('tr'));
+                  var row = $(document.createElement('tr')).addClass('jqdb-data-row');
                   var i=0;
                   $.each(v, function(k2,v2) {
                      /*
                       * COLS / FIELDS AND THEIR INNER
-                      */                     
-                     if(typeof options.fields[k2] === "undefined")
+                      */
+                     if(typeof options.fields[k2] === "undefined") // || options.fields[k2].type === "hidden"
                         return; // prevent printf of mysql-data-fields that were not selected by the user-config (but returned by the qry result)
 
                      var editable = options.fields[k2].editable || options.editable_default; // default when not configured -> use default config option as val
@@ -103,10 +104,10 @@
                            cellContent = $(document.createElement('select'));
                            
                            if(options.fields[k2].select_free_edit) { // build right click functionality for the "select_free_edit" config property
-                              //select_elements.push({value:v2, label:v2}); // add the free value
+                              select_elements.push({value:v2, label:v2}); // add the free value
                               cellContent.on('contextmenu', function (e) {
                                  if (e.button === 2) {
-                                    var free_val = prompt('Value?')
+                                    var free_val = prompt('Value?');
                                     if(free_val){
                                        cellContent.find('option:selected').text(free_val);
                                        cellContent.change();
@@ -121,13 +122,15 @@
                               $(document.createElement('option'))
                                       .text(sv.label)
                                       .val(sv.value)
-                                      .attr('selected', sv.label===v2) // mark selected if needed
-                                      .appendTo(cellContent)
+                                      .attr('selected', sv.value == v2) // mark selected from db
+                                      .appendTo(cellContent);
                            });
                         }
-                        else{
-                           cellContent = $(document.createElement('input'))
-                                         .val(v2);
+                        else {
+                           cellContent = 
+                              $(document.createElement('input'))
+                                 .attr('type', type)
+                                 .val(v2);
                         }
                         /*
                          * bind change event to the input
@@ -136,7 +139,7 @@
                            var additional_data = {
                               pk_data : $(this).parent().data('pk_data'), // contains data that can be used to build a WHERE clause for a query (field1=>it's value ; field2=>also it's value [...])
                               changed_field : $(this).parent().data('field'),
-                              changed_nu_val : type==='bool' ? ($(this).is(':checked') ? 1 : 0) : (type==='select' ? $(this).find(':selected').text() : $(this).val())
+                              changed_nu_val : type==='bool' ? ($(this).is(':checked') ? 1 : 0) : (type==='select' ? $(this).find(':selected').val() : $(this).val())
                            };
                            /*
                             * UPDATE
@@ -151,7 +154,7 @@
                         });
 
                         // restrict input to only numbers
-                        if(type==='int'){
+                        if(type==='int') {
                            cellContent.keypress(function(e) {
                               if(!String.fromCharCode(e.charCode).match(/\d/) && e.charCode !== 13)
                                  e.preventDefault();
@@ -165,7 +168,7 @@
                            });
                         }
 
-                        if(type==='bool'){ // change type of the input to a checkbox
+                        if(type==='bool') { // change type of the input to a checkbox
                            cellContent.attr('type', 'checkbox');
                            cellContent.attr('checked', parseInt(v2)===1 ); // mark checked / unchecked according to the db
                         }
@@ -173,6 +176,7 @@
                         if(type==='string') {
                            cellContent.attr('type', 'text');
                         }
+                        
                      }
                      else { // not editable
                         cellContent = $(document.createElement('span'))
@@ -188,6 +192,7 @@
                      var field = $(document.createElement('td'))
                              .click(function(){$(this).find('input').focus();}) // delegate focus when the inpu is smaller then the cell
                              .addClass('col-'+(i++))
+                             .addClass(type==='hidden' ? 'hidden' : '')
                              .append(cellContent)
                              .appendTo(row);
 
@@ -233,7 +238,7 @@
                                  options : $.extend(options, additional_data),
                               }, function(res) {
                                  callbacks.deleteSuccess.call(this, res);
-                                 if(res.success === 1)
+                                 //if(res.success === 1)
                                     loadData(page);//container_row.remove();
                               }, 'json');
                            }
@@ -249,16 +254,22 @@
                 */ 
                if(options.create_permitted) {
                   var row = $(document.createElement('tr'))
-                              .attr('id', 'insert-row-row');
+                              .addClass('insert-row-row');
                   var i=0;
                   $.each(options.fields, function (k,v) {
                      $(document.createElement('td'))
                         .addClass('col-'+(i++))
+                        .addClass(v.type==='hidden'?'hidden':'')
                         .append(
                            $(document.createElement(v.type === 'select' ? 'select' : 'input'))
                            .attr("placeholder", v.placeholder || "+")
                            .attr("maxlength", v.type==="int"?'10':'')
+                           .addClass(v.type==='hidden'?'hidden':'')
                            .attr("name", k)
+                           .each(function(){ // trick to chain a custom function that conditional may not affect the chain at all but COULD affect it
+                              if(v.default_value)
+                                 return $(this).val(v.default_value);
+                           })
                            .attr("type", (v.type==="bool"?'checkbox': 'text')) // remember: unticked checkboxes wont be submitted
                            .data("type", v.type) // the real type that comes configed in js 
                            .prop("required",  v.required || options.required_default)
@@ -310,7 +321,10 @@
                                     options : $.extend(options, additional_data),
                                  }, function(res) {
                                     loadData(page, function(){
-                                       $('#insert-row-row td').effect('highlight', {color:'lime'}); // .animate(.. with colors and .effect('highlight... ONLY work when jQuery UI is loaded with efect-core (and those specific effects needed)
+                                       //console.info(row);
+                                       //window.foo = selectedElement.find('.insert-row-row');
+                                       //console.info(selectedElement.find('.insert-row-row'));
+                                       selectedElement.find('.insert-row-row input, .insert-row-row select').effect('highlight', {color:'lime'}); // .animate(.. with colors and .effect('highlight... ONLY work when jQuery UI is loaded with efect-core (and those specific effects needed)
                                     });
 
                                     // call up callback

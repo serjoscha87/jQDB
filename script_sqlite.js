@@ -15,9 +15,10 @@ $(document).ready(function() {
          foo : {
             editable : true,
             required : true,
-            type : 'string',
+            type : 'hidden',
             //label : 'foo!',
-            class : 'field-%field%'
+            class : 'field-%field%',
+            default_value : 'abc' 
          },
          bar : {
             editable : true,

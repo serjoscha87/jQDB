@@ -44,44 +44,32 @@ class MySQLConnector extends bConnector implements iConnector {
          $where_condition .= sprintf(' %s ',implode(' ', $condition_row));
       }
       
-      // check if all selected fields (via js) are existing
-      /*$real_table_fields = $this->dbh->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-              . "WHERE TABLE_SCHEMA = '".$d->getAttribute(PO::ATTR_DATABASE_NAME)."' AND TABLE_NAME = '".$d->getAttribute(PO::ATTR_TABLE)."'")
-              ->fetchAll(\PDO::FETCH_COLUMN );
-      $selected_fields = array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS)); // from js config
-      if(count(array_intersect($selected_fields,$real_table_fields)) < count($selected_fields)){
-         return array(
-             'success' => false, 
-             'error_str' => sprintf('You tried to select fields (%s) that are not existing!', implode(',', array_diff($selected_fields,$real_table_fields)))
-         );
-      }*/
-      
       $resultsQuery = $this->dbh->query(sprintf('SELECT %s, %s FROM %s %s %s %s', 
-              implode(',', $d->getAttribute(PO::ATTR_PRIMARY_KEY_FIELDS)),
-              $fields,
-              $d->getAttribute(PO::ATTR_TABLE),
-              $d->getAttribute(PO::ATTR_CONDITION) ? $where_condition : '',
-              $d->getAttribute(PO::ATTR_ORDER_BY) ? sprintf('ORDER BY %s %s', $d->getAttribute(PO::ATTR_ORDER_BY)[0], $d->getAttribute(PO::ATTR_ORDER_BY)[1]) : '', // TODO enable multiple sort possibility
-              $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE) ? sprintf('LIMIT %d,%d', 
-                                                                     $d->getAttribute(PO::ATTR_PAGE)*$d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE), 
-                                                                     $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE)) : ''
-              ));
+         implode(',', $d->getAttribute(PO::ATTR_PRIMARY_KEY_FIELDS)),
+         $fields,
+         $d->getAttribute(PO::ATTR_TABLE),
+         $d->getAttribute(PO::ATTR_CONDITION) ? $where_condition : '',
+         $d->getAttribute(PO::ATTR_ORDER_BY) ? sprintf('ORDER BY %s %s', $d->getAttribute(PO::ATTR_ORDER_BY)[0], $d->getAttribute(PO::ATTR_ORDER_BY)[1]) : '', // TODO enable multiple sort possibility
+         $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE) ? sprintf('LIMIT %d,%d', 
+         $d->getAttribute(PO::ATTR_PAGE)*$d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE), 
+         $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE)) : ''
+      ));
       
       if($resultsQuery) { // catch mistaken queries
          return array( // everything okay
-             'results' => $resultsQuery->fetchAll(),
-             // get over all result amount
-             'result_amount' => $this->dbh->query(sprintf('SELECT null FROM %s %s',
-                 $d->getAttribute(PO::ATTR_TABLE),
-                 $d->getAttribute(PO::ATTR_CONDITION) ? $where_condition : ''
-                ))->rowCount(),
-             'success' => true
-            );
+            'results' => $resultsQuery->fetchAll(),
+            // get over all result amount
+            'result_amount' => $this->dbh->query(sprintf('SELECT null FROM %s %s',
+               $d->getAttribute(PO::ATTR_TABLE),
+               $d->getAttribute(PO::ATTR_CONDITION) ? $where_condition : ''
+            ))->rowCount(),
+            'success' => true
+         );
       }
       else
          return array( // something went wrong
-             'success' => false, 
-             'error_str' => sprintf('Failure due fetching the table Data: %s',$this->dbh->errorInfo()[2])
+            'success' => false, 
+            'error_str' => sprintf('Failure due fetching the table Data: %s',$this->dbh->errorInfo()[2])
          );
    }
    
@@ -90,14 +78,16 @@ class MySQLConnector extends bConnector implements iConnector {
       $d = new ParameterObject($data);
       
       $qry = sprintf('UPDATE %s SET `%s`="%s" WHERE %s',
-               $d->getAttribute(PO::ATTR_TABLE),
-               $d->getAttribute(PO::ATTR_CHANGED_FIELD),
-               $d->getAttribute(PO::ATTR_CHANGED_FIELD_NEW_VALUE),
-               $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA)));
+         $d->getAttribute(PO::ATTR_TABLE),
+         $d->getAttribute(PO::ATTR_CHANGED_FIELD),
+         $d->getAttribute(PO::ATTR_CHANGED_FIELD_NEW_VALUE),
+         $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA))
+      );
 
-      //$this->dbh->exec($qry);
-      
-      return array('success' => $this->dbh->exec($qry));
+      return array(
+         'success' => $this->dbh->exec($qry),
+         'id' => implode($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA))
+      );
    }
    
    public function insertRow($data) {
@@ -108,8 +98,8 @@ class MySQLConnector extends bConnector implements iConnector {
       $qry = sprintf('INSERT INTO %s SET %s', $d->getAttribute(PO::ATTR_TABLE), $fieldSetterString);
 
       return array(
-          'success' => $this->dbh->exec($qry),
-          'id' => $this->dbh->lastInsertId() 
+         'success' => $this->dbh->exec($qry),
+         'id' => $this->dbh->lastInsertId() 
       );
    }
    
@@ -119,15 +109,6 @@ class MySQLConnector extends bConnector implements iConnector {
       $qry = sprintf('DELETE FROM %s WHERE %s', $d->getAttribute(PO::ATTR_TABLE), $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA)) );
       $affected = $this->dbh->exec($qry);
       return array('success' => $affected);
-   }
-   
-   /**
-    * Easy one-line query clause string building method
-    * @param array $data key,value pairs to be combined to a condition
-    * @return String the String that can be used after WHERE
-    */
-   private function easyBuildQueyClause($data, $concater='AND') {
-      return str_replace(',', $concater, substr(preg_replace('/"(\w*)":/' , '$1=' , json_encode($data)),1,-1)); // so obvious!
    }
    
 }
