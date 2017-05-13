@@ -43,7 +43,21 @@ class SQLiteConnector extends bConnector implements iConnector {
          $where_condition .= sprintf(' %s ',implode(' ', $condition_row));
       }
       
-      $resultsQuery = $this->dbh->query(sprintf('SELECT %s, %s FROM %s %s %s %s', 
+      /*$fieldsQuery = $this->dbh->query("PRAGMA table_info(".$d->getAttribute(PO::ATTR_TABLE).")");
+      $real_table_fields = []; // concrete and existing db fields
+      while($iter_data = $fieldsQuery->fetchArray(SQLITE3_ASSOC))
+         $real_table_fields[] = $iter_data['name'];
+      
+      $selected_fields = array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS)); // from js config
+      
+      if(count(array_intersect($selected_fields,$real_table_fields)) < count($selected_fields)){
+         return array(
+             'success' => false, 
+             'error_str' => sprintf('You tried to select fields (%s) that are not existing!', implode(',', array_diff($selected_fields,$real_table_fields)))
+         );
+      }*/
+      
+      $resultsQuery = @$this->dbh->query(sprintf('SELECT %s, %s FROM %s %s %s %s', 
               implode(',', $d->getAttribute(PO::ATTR_PRIMARY_KEY_FIELDS)),
               $fields,
               $d->getAttribute(PO::ATTR_TABLE),
@@ -53,15 +67,14 @@ class SQLiteConnector extends bConnector implements iConnector {
               $d->getAttribute(PO::ATTR_PAGE)*$d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE), 
               $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE)) : ''
       ));
-      
-      $resAll = [];
-      while($iter_data = $resultsQuery->fetchArray(SQLITE3_ASSOC))
-         $resAll[] = $iter_data;
               
       /*
        * proceed or catch mistaken queries
        */
       if($resultsQuery) { 
+         $resAll = [];
+         while($iter_data = $resultsQuery->fetchArray(SQLITE3_ASSOC))
+            $resAll[] = $iter_data;
          return array( // everything okay
              'results' => $resAll,
              // get over all result amount
@@ -75,7 +88,7 @@ class SQLiteConnector extends bConnector implements iConnector {
       else
          return array( // something went wrong
              'success' => false, 
-             'error_str' => sprintf('Failure due fetching the table Data: %s',$this->dbh->errorInfo()[2])
+             'error_str' => sprintf('Failure due fetching the table Data: %s',$this->dbh->lastErrorMsg())
          );
    }
    
@@ -101,7 +114,10 @@ class SQLiteConnector extends bConnector implements iConnector {
               implode($is, $ins_dat)
       );
       
-      return array('success' => $this->dbh->exec($qry));
+      return array(
+          'success' => $this->dbh->exec($qry),
+          'id' => $this->dbh->lastInsertRowid()
+      );
    }
    
    public function deleteRow($data) {

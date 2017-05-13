@@ -44,6 +44,18 @@ class MySQLConnector extends bConnector implements iConnector {
          $where_condition .= sprintf(' %s ',implode(' ', $condition_row));
       }
       
+      // check if all selected fields (via js) are existing
+      /*$real_table_fields = $this->dbh->query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+              . "WHERE TABLE_SCHEMA = '".$d->getAttribute(PO::ATTR_DATABASE_NAME)."' AND TABLE_NAME = '".$d->getAttribute(PO::ATTR_TABLE)."'")
+              ->fetchAll(\PDO::FETCH_COLUMN );
+      $selected_fields = array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS)); // from js config
+      if(count(array_intersect($selected_fields,$real_table_fields)) < count($selected_fields)){
+         return array(
+             'success' => false, 
+             'error_str' => sprintf('You tried to select fields (%s) that are not existing!', implode(',', array_diff($selected_fields,$real_table_fields)))
+         );
+      }*/
+      
       $resultsQuery = $this->dbh->query(sprintf('SELECT %s, %s FROM %s %s %s %s', 
               implode(',', $d->getAttribute(PO::ATTR_PRIMARY_KEY_FIELDS)),
               $fields,
@@ -95,7 +107,10 @@ class MySQLConnector extends bConnector implements iConnector {
        
       $qry = sprintf('INSERT INTO %s SET %s', $d->getAttribute(PO::ATTR_TABLE), $fieldSetterString);
 
-      return array('success' => $this->dbh->exec($qry));
+      return array(
+          'success' => $this->dbh->exec($qry),
+          'id' => $this->dbh->lastInsertId() 
+      );
    }
    
    public function deleteRow($data) {
