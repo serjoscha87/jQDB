@@ -28,7 +28,7 @@
       
       <script>
          $('#test-update-row').click(function() {
-            var inst = window.jQDB.instances[0];
+            var inst = $('.jQDB').jQDB('get');
             inst.api.updateRow({
                table : inst.api.getOptions()['table'],
                update_data : {

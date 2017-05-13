@@ -4,6 +4,9 @@
       
       var selectedElement = this;
       
+      if(selectedElement.hasClass('jQDB-initialized') && options === 'get')
+         return window.jQDB.instances[selectedElement.data('jQDB-insts')];
+      
       if(!selectedElement.is('table'))
          return publishError("Please use a <table> as base DOM Element for jQDB, not >"+selectedElement.prop("tagName")+"<");
       
@@ -309,7 +312,7 @@
                                     
                                     var val = ( // find the val according to the current element type (simple input, select / checkbox)
                                             di.data('type') === 'bool' ? (di.is(':checked')?1:0) : 
-                                                (di.data('type') === 'select' ? di.find('option:selected').text() : di.val() )
+                                                (di.data('type') === 'select' ? (di.find('option:selected').val() || di.find('option:selected').text()) : di.val() )
                                     );
                                     // assign additional data for posting
                                     additional_data.insert_data[di.attr('name')] = val;
@@ -348,6 +351,7 @@
                   $(document.createElement('td')) // this td can also be clicked to omit pressing enter in any field
                      .html('<b>+</b>')
                      .attr('title', 'Add this as a new row')
+                     .addClass('jqdb-new-row-ctrl')
                      .css('cursor', 'pointer')
                      .click(function () {
                          $(this).parents('tr').find('td > *').eq(0).trigger($.Event('keypress', { keyCode: 13 } ));
@@ -429,7 +433,7 @@
       }
       
       this.api = {
-         addRow : function (data, local_callback) {
+         addRow : function (data, local_callback=()=>{}) {
             $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                // {data}
                action : 'insert',
@@ -445,7 +449,7 @@
                callbacks.insertSuccess.call(this, res);
             });
          },
-         updateField : function(data, local_callback) {
+         updateField : function(data, local_callback=()=>{}) {
             $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                action : 'updateSingle',
                options : $.extend(options, data),
@@ -455,7 +459,7 @@
                callbacks.updateSuccess.call(this, res);
             }, 'json');
          },
-         updateRow : function(data, local_callback) {
+         updateRow : function(data, local_callback=()=>{}) {
             $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                action : 'updateRow',
                options : $.extend(options, data),
@@ -470,7 +474,7 @@
                callbacks.updateSuccess.call(this, res);
             }, 'json');
          },
-         deleteRow : function(data, local_callback) {
+         deleteRow : function(data, local_callback=()=>{}) {
             $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                action : 'delete',
                options : $.extend(options, data),
@@ -490,8 +494,11 @@
          }
       };
       
+      // instance handling so we are able to receive the instance back via using: $('table.previously-initialized-jQDB').jQDB()
       var current_instance = this;
-      (window.jQDB || (window.jQDB = {instances:[]}))['instances'].push(current_instance);
+      (window.jQDB || (window.jQDB = {instances:[],inst_i:0}))['instances'].push(current_instance);
+      selectedElement.addClass('jQDB-initialized');
+      selectedElement.data('jQDB-insts', window.jQDB.inst_i++);
       
       return this;
    };
