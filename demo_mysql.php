@@ -22,5 +22,24 @@
       <table class="jQDB">
       </table>
       
+      <button type="button" id="test-update-row">[test] Set val of field "bar" to a random num between 1 and 200 at row with id 1</button>
+      
+      <script>
+         $('#test-update-row').click(function() {
+            var inst = window.jQDB.instances[0];
+            inst.api.updateRow({
+               table : inst.api.getOptions()['table'],
+               update_data : {
+                  bar : Math.floor(Math.random() * 200) + 1  
+               },
+               pk_data: {
+                  id : 1
+               }
+            }, function() {
+               console.info("done update!");
+            });
+         });
+      </script>
+      
    </body>
 </html>

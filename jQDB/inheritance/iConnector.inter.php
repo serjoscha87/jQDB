@@ -11,6 +11,7 @@ interface iConnector {
    
    public function loadTableData($data);
    public function updateSingleField($data);
+   public function updateRow($data);
    public function insertRow($data);
    
    public function authenticate($host, $username, $password, $db);

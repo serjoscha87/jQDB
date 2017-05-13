@@ -78,7 +78,6 @@ class MySQLConnector extends bConnector implements iConnector {
    }
    
    public function updateSingleField($data) {
-
       $d = new ParameterObject($data);
       
       $qry = sprintf('UPDATE %s SET `%s`="%s" WHERE %s',
@@ -94,13 +93,28 @@ class MySQLConnector extends bConnector implements iConnector {
       );
    }
    
+   public function updateRow($data) {
+      $d = new ParameterObject($data);
+      
+      $qry = sprintf('UPDATE %s SET %s WHERE %s',
+         $d->getAttribute(PO::ATTR_TABLE), 
+         $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_UPDATE_DATA)),
+         $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA))
+      );
+      
+      return array(
+         'success' => $this->dbh->exec($qry),
+         'id' => implode($d->getAttribute(PO::ATTR_PRIMARY_KEY_DATA))
+      );
+   }
+   
    public function insertRow($data) {
       $d = new ParameterObject($data);
 
       $fieldSetterString = $this->easyBuildQueyClause($d->getAttribute(PO::ATTR_INSERT_DATA),',');
        
       $qry = sprintf('INSERT INTO %s SET %s', $d->getAttribute(PO::ATTR_TABLE), $fieldSetterString);
-
+      
       return array(
          'success' => $this->dbh->exec($qry),
          'id' => $this->dbh->lastInsertId() 

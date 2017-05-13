@@ -12,7 +12,8 @@ class bConnector {
     */
    private $calls = array(
        'load' => 'loadTableData',
-       'update' => 'updateSingleField',
+       'updateSingle' => 'updateSingleField',
+       'updateRow' => 'updateRow',
        'insert' => 'insertRow',
        'delete' => 'deleteRow'
    );

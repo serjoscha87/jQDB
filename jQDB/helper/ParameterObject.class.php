@@ -30,9 +30,12 @@ class ParameterObject {
    const ATTR_CODEBASE = 'codebase';
    
    // UPDATE SPECIFIC
-   const ATTR_CHANGED_FIELD = 'changed_field';
    const ATTR_PRIMARY_KEY_DATA = 'pk_data';
+   // UPDATE SINGLE SPECIFIC
+   const ATTR_CHANGED_FIELD = 'changed_field';
    const ATTR_CHANGED_FIELD_NEW_VALUE = 'changed_nu_val';
+   // UPDATE ROW SPECIFIC
+   const ATTR_UPDATE_DATA = 'update_data';
    
    // INSERT SPECIFIC
    const ATTR_INSERT_DATA = 'insert_data';

@@ -28,7 +28,10 @@
          prompt_before_delete : 'Are you sure?',
          codebase : './',
          editable_default : false, // when the "editable" configuration for fields are omitted: this will be used 
-         required_default : false // "" for required
+         required_default : false, // "" for required
+         reload_on_delete : true,
+         reload_on_insert : true,
+         reload_on_update_row: true
       }, options);
       
       /*
@@ -55,14 +58,15 @@
             },
             dataType : 'json',
             type : 'post',
-            //async : true, 
             success: function(res) {
                selectedElement.find('tr').remove(); // remove previous markup when paging nav is used
                
                if(!res.success) // catch errors for connect and loadData
                   return publishError(res.error_str);
                
-               // Render table header
+               /*
+                * Render table header -> labels/captions
+                */
                var row = $(document.createElement('tr'));
                var i=0; // for the col class name
                $.each(options.fields, function(k,v) {
@@ -77,7 +81,7 @@
                });
                selectedElement.append(row);
 
-               // Render DB data fields
+               // Render DB data fields + their current value
                $.each(res.results, function(k,v) {
                   /*
                    * ROWS
@@ -88,8 +92,8 @@
                      /*
                       * COLS / FIELDS AND THEIR INNER
                       */
-                     if(typeof options.fields[k2] === "undefined") // || options.fields[k2].type === "hidden"
-                        return; // prevent printf of mysql-data-fields that were not selected by the user-config (but returned by the qry result)
+                     if(typeof options.fields[k2] === "undefined") 
+                        return; // prevent printing of table-fields that were not selected by the user-config (but returned by the qry result)
 
                      var editable = options.fields[k2].editable || options.editable_default; // default when not configured -> use default config option as val
                      var cellContent = null;
@@ -98,6 +102,7 @@
                         var type = options.fields[k2].type || 'string'; // default type: string (when none is defined)
 
                         if(type === 'select') {
+                           /////  TYPE : SELECT //////
                            var select_elements = options.fields[k2].select_elements.slice(); // slice: this is a hack; see http://stackoverflow.com/questions/7486085/copying-array-by-value-in-javascript
                            if(typeof select_elements==='undefined') return publishError('You configured a select box but did not tell any fixed drop down options. Please do so using >select_elements< next to type >select<');
                            cellContent = $(document.createElement('select'));
@@ -116,7 +121,7 @@
                                  return true;
                               }); 
                            }
-                           
+                           // select OPTIONS
                            $.each(select_elements, function(sk,sv) {
                               $(document.createElement('option'))
                                       .text(sv.label)
@@ -124,8 +129,10 @@
                                       .attr('selected', sv.value == v2) // mark selected from db
                                       .appendTo(cellContent);
                            });
+                           ///// END => TYPE : SELECT //////
                         }
                         else {
+                           //// Everything else but a select is a input (text, num, checkbox(bool), hidden)
                            cellContent = 
                               $(document.createElement('input'))
                                  .attr('type', type)
@@ -143,13 +150,16 @@
                            /*
                             * UPDATE
                             */
-                           $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+                           /*$.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                               action : 'update',
                               options : $.extend(options, additional_data),
                            }, function(res) {
                               cellContent.fadeOut(150).fadeIn(150); // visual save feedback
                               callbacks.updateSuccess.call(this, res);
-                           }, 'json');
+                           }, 'json');*/
+                           current_instance.api.updateField(additional_data, function() {
+                              cellContent.fadeOut(150).fadeIn(150); // visual save feedback
+                           });
                         });
 
                         // restrict input to only numbers
@@ -166,28 +176,24 @@
                                  cellContent.css('background-color','transparent');
                            });
                         }
-
-                        if(type==='bool') { // change type of the input to a checkbox
+                        else if(type==='bool') { // change type of the input to a checkbox
                            cellContent.attr('type', 'checkbox');
                            cellContent.attr('checked', parseInt(v2)===1 ); // mark checked / unchecked according to the db
                         }
-
-                        if(type==='string') {
+                        else if(type==='string') {
                            cellContent.attr('type', 'text');
                         }
                         
                      }
                      else { // not editable
-                        cellContent = $(document.createElement('span'))
-                                          .text(v2);
+                        cellContent = 
+                           $(document.createElement('span'))
+                              .text(v2);
                      }
                      
                      cellContent.attr('data-field', k2);
                      
-                     /*if(options.fields[k2].class) {
-                        cellContent.addClass(options.fields[k2].class.replace('%field%', k2));
-                     }*/
-                     cellContent.addClass( (options.fields[k2].class || 'jQDBField-%field%').replace('%field%', k2));
+                     cellContent.addClass( (options.fields[k2].class || 'jQDBField-%field%').replace('%field%', k2) );
 
                      var field = $(document.createElement('td'))
                              .click(function(){$(this).find('input').focus();}) // delegate focus when the inpu is smaller then the cell
@@ -233,14 +239,16 @@
                             * do DELETE
                             */
                            if(doDelete) {
-                              $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+                              /*$.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                                  action : 'delete',
                                  options : $.extend(options, additional_data),
                               }, function(res) {
                                  callbacks.deleteSuccess.call(this, res);
                                  //if(res.success === 1)
                                     loadData(page);//container_row.remove();
-                              }, 'json');
+                              }, 'json');*/
+                              // !!!!!!!!!!!!
+                              current_instance.api.deleteRow(additional_data);
                            }
                         })
                         .appendTo(row);
@@ -278,9 +286,9 @@
                               if(de.data('type') === 'select') {
                                  v.select_elements.forEach(function(v,k) {
                                     $(document.createElement('option'))
-                                            .text(v.label)
-                                            .val(v.value)
-                                            .appendTo(de);
+                                       .text(v.label)
+                                       .val(v.value)
+                                       .appendTo(de);
                                  });
                               }
                            })
@@ -316,19 +324,20 @@
                                     return;
 
                                  // if the "valid-check" (at least one text input is filled) was successful: post the data to the connector to insert a new row
-                                 $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+                                 /*$.post(options.codebase + 'jQDB/generic_connector_factory.php', {
                                     action : 'insert',
                                     options : $.extend(options, additional_data),
                                  }, function(res) {
                                     loadData(page, function(){
-                                       //console.info(row);
-                                       //window.foo = selectedElement.find('.insert-row-row');
-                                       //console.info(selectedElement.find('.insert-row-row'));
                                        selectedElement.find('.insert-row-row input, .insert-row-row select').effect('highlight', {color:'lime'}); // .animate(.. with colors and .effect('highlight... ONLY work when jQuery UI is loaded with efect-core (and those specific effects needed)
                                     });
 
                                     // call up callback
                                     callbacks.insertSuccess.call(this, res);
+                                 });*/
+                                 current_instance.api.addRow(additional_data, function () {
+                                    // .animate(.. with colors and .effect('highlight... ONLY work when jQuery UI is loaded with efect-core (and those specific effects needed)
+                                    selectedElement.find('.insert-row-row input, .insert-row-row select').effect('highlight', {color:'lime'}); 
                                  });
                               }
                            }) // end input creation
@@ -337,13 +346,15 @@
                         .appendTo(row);
                   });
                   $(document.createElement('td')) // this td can also be clicked to omit pressing enter in any field
-                          .html('<b>+</b>')
-                          .attr('title', 'Add this as a new row')
-                          .css('cursor', 'pointer')
-                          .click(function () {
-                              $(this).parents('tr').find('td > *').eq(0).trigger($.Event('keypress', { keyCode: 13 } ));
-                          })
-                          .appendTo(row);
+                     .html('<b>+</b>')
+                     .attr('title', 'Add this as a new row')
+                     .css('cursor', 'pointer')
+                     .click(function () {
+                         $(this).parents('tr').find('td > *').eq(0).trigger($.Event('keypress', { keyCode: 13 } ));
+                     })
+                     .appendTo(row);
+             
+                  // finally append the row
                   selectedElement.append(row);
                }
 
@@ -416,6 +427,71 @@
                  .css({'color':'red'})
                  .appendTo($('body'));
       }
+      
+      this.api = {
+         addRow : function (data, local_callback) {
+            $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+               // {data}
+               action : 'insert',
+               options : $.extend(options, data)
+            }, function(res) {
+               if(options.reload_on_insert)
+                  loadData(options['page'], function() {
+                     local_callback.call(this,res);
+                  });
+               else
+                  local_callback.call(this,res);
+               // call up global callback
+               callbacks.insertSuccess.call(this, res);
+            });
+         },
+         updateField : function(data, local_callback) {
+            $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+               action : 'updateSingle',
+               options : $.extend(options, data),
+            }, function(res) {
+               local_callback.call(this,res);
+               // global callback
+               callbacks.updateSuccess.call(this, res);
+            }, 'json');
+         },
+         updateRow : function(data, local_callback) {
+            $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+               action : 'updateRow',
+               options : $.extend(options, data),
+            }, function(res) {
+               if(options.reload_on_update_row)
+                  loadData(options['page'], function() {
+                     local_callback.call(this,res);
+                  });
+               else
+                  local_callback.call(this,res);
+               // global callback
+               callbacks.updateSuccess.call(this, res);
+            }, 'json');
+         },
+         deleteRow : function(data, local_callback) {
+            $.post(options.codebase + 'jQDB/generic_connector_factory.php', {
+               action : 'delete',
+               options : $.extend(options, data),
+            }, function(res) {
+               if(options.reload_on_delete)
+                  loadData(options['page'], function() {
+                     local_callback.call(this,res);
+                  });
+               else
+                  local_callback.call(this,res);
+               // global callback
+               callbacks.deleteSuccess.call(this, res);
+            }, 'json');
+         },
+         getOptions : function (){
+            return options;
+         }
+      };
+      
+      var current_instance = this;
+      (window.jQDB || (window.jQDB = {instances:[]}))['instances'].push(current_instance);
       
       return this;
    };
