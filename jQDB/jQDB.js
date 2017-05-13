@@ -70,7 +70,7 @@
                      delete options.fields[k];
                   else
                      $(document.createElement('th'))
-                        .addClass('col-'+(i++))
+                        .addClass('jqdb-col-header jqdb-col-header-'+(i++))
                         .addClass(v.type==='hidden'?'hidden':'')
                         .html(v.label || k)
                         .appendTo(row);
@@ -191,7 +191,7 @@
 
                      var field = $(document.createElement('td'))
                              .click(function(){$(this).find('input').focus();}) // delegate focus when the inpu is smaller then the cell
-                             .addClass('col-'+(i++))
+                             .addClass('jqdb-col jqdb-col-'+(i++))
                              .addClass(type==='hidden' ? 'hidden' : '')
                              .append(cellContent)
                              .appendTo(row);
@@ -258,7 +258,7 @@
                   var i=0;
                   $.each(options.fields, function (k,v) {
                      $(document.createElement('td'))
-                        .addClass('col-'+(i++))
+                        .addClass('jqdb-new_row-col jqdb-new_row-col-'+(i++))
                         .addClass(v.type==='hidden'?'hidden':'')
                         .append(
                            $(document.createElement(v.type === 'select' ? 'select' : 'input'))
