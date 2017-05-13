@@ -30,8 +30,8 @@ $(document).ready(function() {
          },
          some_bool : {
             editable : true,
-            type : 'bool',
-            class : 'foo bar'
+            type : 'bool'
+            //class : 'foo bar'
          },
          dropdown : {
             editable : true,

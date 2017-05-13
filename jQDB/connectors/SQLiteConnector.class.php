@@ -36,6 +36,10 @@ class SQLiteConnector extends bConnector implements iConnector {
    public function loadTableData($data) {
       $d = new ParameterObject($data);
       
+      /*$filtered_selected_fields = array_filter($d->getAttribute(PO::ATTR_SELECTED_FIELDS), function ($obj) { // throw out custom fields (because those are considere not to be real db fields)
+         return $obj['type']!=='custom';
+      });*/
+      
       $fields = implode(', ', array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS))); // fields to show
       
       $where_condition = 'WHERE ';
@@ -52,8 +56,8 @@ class SQLiteConnector extends bConnector implements iConnector {
          $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE) ? sprintf('LIMIT %d,%d', 
          $d->getAttribute(PO::ATTR_PAGE)*$d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE), 
          $d->getAttribute(PO::ATTR_ELEMENTS_PER_PAGE)) : ''
-      ));
-              
+      ));      
+      
       /*
        * proceed or catch mistaken queries
        */

@@ -57,7 +57,6 @@
             type : 'post',
             //async : true, 
             success: function(res) {
-               
                selectedElement.find('tr').remove(); // remove previous markup when paging nav is used
                
                if(!res.success) // catch errors for connect and loadData
@@ -185,9 +184,10 @@
                      
                      cellContent.attr('data-field', k2);
                      
-                     if(options.fields[k2].class) {
+                     /*if(options.fields[k2].class) {
                         cellContent.addClass(options.fields[k2].class.replace('%field%', k2));
-                     }
+                     }*/
+                     cellContent.addClass( (options.fields[k2].class || 'jQDBField-%field%').replace('%field%', k2));
 
                      var field = $(document.createElement('td'))
                              .click(function(){$(this).find('input').focus();}) // delegate focus when the inpu is smaller then the cell

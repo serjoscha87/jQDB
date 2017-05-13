@@ -37,6 +37,10 @@ class MySQLConnector extends bConnector implements iConnector {
    public function loadTableData($data) {
       $d = new ParameterObject($data);
       
+      /*$filtered_selected_fields = array_filter($d->getAttribute(PO::ATTR_SELECTED_FIELDS), function ($obj) { // throw out custom fields (because those are considere not to be real db fields)
+         return $obj['type']!=='custom';
+      });*/
+      
       $fields = implode(', ', array_keys($d->getAttribute(PO::ATTR_SELECTED_FIELDS))); // fields to show
       
       $where_condition = 'WHERE ';
