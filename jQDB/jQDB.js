@@ -98,7 +98,7 @@
                      if(typeof options.fields[k2] === "undefined") 
                         return; // prevent printing of table-fields that were not selected by the user-config (but returned by the qry result)
 
-                     var editable = (typeof options.fields[k2].editable === undefined ? options.editable_default : options.fields[k2].editable); // default when not configured -> use default config option as val
+                     var editable = (typeof options.fields[k2].editable === "undefined" ? options.editable_default : options.fields[k2].editable); // default when not configured -> use default config option as val
                      var cellContent = null;
                      if (editable) {
                         
